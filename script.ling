@@ -1,5 +1,3 @@
-DEFINE TREAT_WARNINGS_AS_FATAL 1
-
 Variable foo = 5 * 2
 PrintLine(foo)
 Variable bar = 5 * hi

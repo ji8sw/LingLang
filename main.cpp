@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <any>
+#include <chrono>
 
 bool TREAT_WARNINGS_AS_FATAL = true;
 
@@ -75,15 +76,6 @@ std::string ReplaceTildesWithSpaces(std::string Content) {
         }
     }
     return Content;
-}
-
-std::any GetVariableByName(std::string Variable)
-{
-    auto Finder = Variables.find(Variable);
-    if (Finder != Variables.end())
-        return Finder->second;
-
-    return NULL;
 }
 
 std::string DeleteSurroundingBrackets(std::string Content)
