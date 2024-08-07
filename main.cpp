@@ -5,7 +5,6 @@
 #include <sstream>
 #include <vector>
 #include <map>
-#include <any>
 #include <chrono>
 
 bool TREAT_WARNINGS_AS_FATAL = true;
