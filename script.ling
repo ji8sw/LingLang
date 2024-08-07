@@ -1,0 +1,6 @@
+Variable sex = 69
+Variable drug = 420
+Variable password = cum
+Variable funny = sex + drug
+Variable result = funny + password
+PrintLine(result)
