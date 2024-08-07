@@ -1,7 +1,6 @@
-Variable sex = 69
-Variable drug = 420
-Variable password = cum
-Variable funny = sex + drug
-Variable result = funny + password
-PrintLine("hello world")
-PrintLine(result)
+DEFINE TREAT_WARNINGS_AS_FATAL 1
+
+Variable foo = 5 * 2
+PrintLine(foo)
+Variable bar = 5 * hi
+PrintLine(bar)

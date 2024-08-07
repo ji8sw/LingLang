@@ -7,6 +7,8 @@
 #include <map>
 #include <any>
 
+bool TREAT_WARNINGS_AS_FATAL = true;
+
 std::map<std::string, std::string> Variables =
 {
 
@@ -205,10 +207,64 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
                             TokenIndex += 1;
                         }
                     }
+                    else if (Tokens[TokenIndex] == "*")
+                    {
+                        bool BothAreInt = false;
+
+                        if (Variables.find(OtherValue) != Variables.end())
+                            OtherValue = Variables[OtherValue];
+                        if (Variables.find(FinalValue) != Variables.end())
+                            FinalValue = Variables[FinalValue];
+
+                        try {
+                            int ValueA = std::stoi(FinalValue);
+                            int ValueB = std::stoi(OtherValue);
+                            BothAreInt = true;
+                        }
+                        catch (const std::invalid_argument& Error) {
+                            std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, attempt to multiply non-integer.\n";
+                            if (TREAT_WARNINGS_AS_FATAL) return 1;
+                            BothAreInt = false;
+                        }
+                        catch (const std::out_of_range& Error) {
+                            std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, attempt to multiply non-integer.\n";
+                            if (TREAT_WARNINGS_AS_FATAL) return 1;
+                            BothAreInt = false;
+                        }
+
+                        if (BothAreInt)
+                        {
+                            int ValueA = stoi(FinalValue);
+                            int ValueB = stoi(OtherValue);
+                            FinalValue = std::to_string(ValueA * ValueB);
+                        }
+                    }
                 }
 
                 DebugPrint("Created variable \"" + Tokens[TokenNumber + 1]  + "\" with value: " + FinalValue + "\n");
                 Variables[Tokens[TokenNumber + 1]] = FinalValue;
+            }
+            else if (Token == "DEFINE" && Tokens.size() > (TokenNumber + 2))
+            {
+                if (Tokens[TokenNumber + 1] == "TREAT_WARNINGS_AS_FATAL")
+                {
+                    try {
+                        if (Tokens[TokenNumber + 2] == "true")
+                            TREAT_WARNINGS_AS_FATAL = true;
+                        else if (Tokens[TokenNumber + 2] == "false")
+                            TREAT_WARNINGS_AS_FATAL = false;
+                        else if (stoi(Tokens[TokenNumber + 2]) == 1)
+                            TREAT_WARNINGS_AS_FATAL = true;
+                        else if (stoi(Tokens[TokenNumber + 2]) == 0)
+                            TREAT_WARNINGS_AS_FATAL = false;
+
+                        DebugPrint("set TREAT_WARNINGS_AS_FATAL to " + std::to_string(TREAT_WARNINGS_AS_FATAL) + "\n");
+                    }
+                    catch (const std::invalid_argument& Error) {
+                        std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, attempt to define bool as otherwise.\n";
+                        if (TREAT_WARNINGS_AS_FATAL) return 1;
+                    }
+                }
             }
         }
     }
