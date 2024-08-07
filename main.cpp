@@ -177,7 +177,7 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
                         try {
                             int ValueA = std::stoi(FinalValue);
                             int ValueB = std::stoi(OtherValue);
-                            BothAreInt = true;
+                            BothAreInt = true; // we reached here so we're ok
                         }
                         catch (const std::invalid_argument& Error) {
                             BothAreInt = false;
@@ -210,16 +210,16 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
                         try {
                             int ValueA = std::stoi(FinalValue);
                             int ValueB = std::stoi(OtherValue);
-                            BothAreInt = true;
+                            BothAreInt = true; // we reached here so we're ok
                         }
                         catch (const std::invalid_argument& Error) {
                             std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, attempt to multiply non-integer.\n";
-                            if (TREAT_WARNINGS_AS_FATAL) return 1;
+                            if (TREAT_WARNINGS_AS_FATAL) return 1; else break;
                             BothAreInt = false;
                         }
                         catch (const std::out_of_range& Error) {
                             std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, attempt to multiply non-integer.\n";
-                            if (TREAT_WARNINGS_AS_FATAL) return 1;
+                            if (TREAT_WARNINGS_AS_FATAL) return 1; else break;
                             BothAreInt = false;
                         }
 
@@ -228,6 +228,43 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
                             int ValueA = stoi(FinalValue);
                             int ValueB = stoi(OtherValue);
                             FinalValue = std::to_string(ValueA * ValueB);
+                        }
+                    }
+                    else if (Tokens[TokenIndex] == "/")
+                    {
+                        bool BothAreInt = false;
+
+                        if (Variables.find(OtherValue) != Variables.end())
+                            OtherValue = Variables[OtherValue];
+                        if (Variables.find(FinalValue) != Variables.end())
+                            FinalValue = Variables[FinalValue];
+
+                        try {
+                            int ValueA = std::stoi(FinalValue);
+                            int ValueB = std::stoi(OtherValue);
+                            BothAreInt = true; // we reached here so we're ok
+                        }
+                        catch (const std::invalid_argument& Error) {
+                            std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, attempt to multiply non-integer.\n";
+                            if (TREAT_WARNINGS_AS_FATAL) return 1; else break;
+                            BothAreInt = false;
+                        }
+                        catch (const std::out_of_range& Error) {
+                            std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, attempt to multiply non-integer.\n";
+                            if (TREAT_WARNINGS_AS_FATAL) return 1; else break;
+                            BothAreInt = false;
+                        }
+
+                        if (BothAreInt)
+                        {
+                            int ValueA = stoi(FinalValue);
+                            int ValueB = stoi(OtherValue);
+                            if (ValueA == 0 || ValueB == 0)
+                            {
+                                std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, attempt to divide by 0.\n";
+                                if (TREAT_WARNINGS_AS_FATAL) return 1; else break;
+                            }
+                            FinalValue = std::to_string(ValueA / ValueB);
                         }
                     }
                 }
@@ -249,7 +286,7 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
                         else if (stoi(Tokens[TokenNumber + 2]) == 0)
                             TREAT_WARNINGS_AS_FATAL = false;
 
-                        DebugPrint("set TREAT_WARNINGS_AS_FATAL to " + std::to_string(TREAT_WARNINGS_AS_FATAL) + "\n");
+                        DebugPrint("Set TREAT_WARNINGS_AS_FATAL to " + std::to_string(TREAT_WARNINGS_AS_FATAL) + "\n");
                     }
                     catch (const std::invalid_argument& Error) {
                         std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, attempt to define bool as otherwise.\n";

@@ -6,7 +6,7 @@ Ling is a simple, interpreted programming language created for fun and learning.
 
 - **Variable Declaration**: Create and manipulate variables easily.
 - **Print Statements**: Output text and variable contents to the console.
-- **Basic Arithmetic**: Perform addition and multiplication operations on variables and integers.
+- **Basic Arithmetic**: Perform addition, multiplication and division operations on integers.
 - **File-based Execution**: Run Ling scripts from text files.
 
 ## Usage
@@ -50,10 +50,13 @@ Variables can store strings or numbers, but are orientated towards numbers
 Basic addition is supported for integers:
 
 ```
-Variable a = 5 + 3
-Variable result = a * 2
+Variable a = 5 + 5
+Variable b = a / 2
+Variable result = a * b
 Variable sum = result + 10
+PrintLine(sum)
 ```
+Result: `60`
 
 #### Lexer Defines
 Lexer defines change the way the lexer behaves when interpreting your script.

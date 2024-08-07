@@ -1,4 +1,5 @@
-Variable foo = 5 * 2
-PrintLine(foo)
-Variable bar = 5 * hi
-PrintLine(bar)
+Variable a = 5 + 5
+Variable b = a / 2
+Variable result = a * b
+Variable sum = result + 10
+PrintLine(sum)
