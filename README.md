@@ -1,6 +1,7 @@
+
 # Ling Language
 
-Ling is a simple, interpreted programming language created for fun and learning. It provides basic programming principles and is designed to be easy to use.
+Ling is a simple, interpreted programming language created for fun and learning. It provides basic programming principles and is designed to be easy to use. Ling is a WIP and everything is subject to change.
 
 ## Features
 
@@ -8,6 +9,7 @@ Ling is a simple, interpreted programming language created for fun and learning.
 - **Print Statements**: Output text and variable contents to the console.
 - **Basic Arithmetic**: Perform addition, multiplication and division operations on integers.
 - **File-based Execution**: Run Ling scripts from text files.
+- **Basic If Statements**: Compare values easily.
 
 ## Usage
 
@@ -35,15 +37,33 @@ To print the value of a variable:
 PrintLine(VariableName)
 ```
 
+You can also use `Print` to not make a new line, call them the same way.
+These are the only existing functions.
+Functions can't have arithmetic as a parameter just yet.
+
 #### Variables
 
 To declare and initialize a variable:
 
 ```
 Variable MyVariable = 123
+
 ```
 
 Variables can store strings or numbers, but are orientated towards numbers
+
+#### If Statements
+
+Determine whether or not to run code by following this basic process.
+
+If 1 == 1 Run
+{
+
+}
+
+Not following this syntax can cause errors.
+
+As of now, they do not support variables (next update)
 
 #### Arithmetic
 
@@ -57,6 +77,8 @@ Variable sum = result + 10
 PrintLine(sum)
 ```
 Result: `60`
+
+There is no order of operations.
 
 #### Lexer Defines
 Lexer defines change the way the lexer behaves when interpreting your script.

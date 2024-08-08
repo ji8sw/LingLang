@@ -7,7 +7,15 @@
 #include <map>
 #include <chrono>
 
+void DebugPrint(std::string Content)
+{
+#ifdef _DEBUG
+    std::cout << Content;
+#endif
+}
+
 bool TREAT_WARNINGS_AS_FATAL = true;
+bool InStatement = false;
 
 std::map<std::string, std::string> Variables =
 {
@@ -89,14 +97,70 @@ std::string DeleteSurroundingBrackets(std::string Content)
     return Content;
 }
 
-void DebugPrint(std::string Content)
+bool TokenIsString(std::string Content)
+{
+    if (Content.empty())
+        return false;
+    if (Content[0] == '"' || Content.back() == '"')
+        return true;
+
+    return false;
+}
+
+std::string DeleteSurroundingQuotes(std::string Content)
+{
+    if (Content.empty())
+        return Content;
+    if (Content[0] == '"')
+        Content = Content.substr(1);
+    if (Content.back() == '"')
+        Content = Content.substr(0, Content.size() - 1);
+
+    return Content;
+}
+
+int FindNextEndBrace(std::vector<std::string> Lines, int StartLine = 0)
+{
+    for (int LineNumber = StartLine; LineNumber < Lines.size(); LineNumber++)
+    {
+        std::vector<std::string> NextLineTokens = SplitIntoSpaces(Lines[LineNumber]);
+        if (NextLineTokens.size() > 0 && NextLineTokens[0].find('}') != std::string::npos) // next line has a closing brace
+            return LineNumber;
+    }
+
+    return -1;
+}
+
+std::string RemoveStartingSpaces(std::string Content)
+{
+    size_t FirstSpacePosition = Content.find_first_not_of(" \t");
+    if (FirstSpacePosition != std::string::npos) 
+        Content.erase(0, FirstSpacePosition);
+
+    return Content;
+}
+
+bool DebugTimerRunning = false;
+std::chrono::steady_clock::time_point DebugTimerStart;
+void DebugTimer()
 {
 #ifdef _DEBUG
-    std::cout << Content;
+    if (!DebugTimerRunning)
+    {
+        DebugTimerStart = std::chrono::high_resolution_clock::now();
+        DebugTimerRunning = true;
+    }
+    else
+    {
+        auto DebugTimerEnd = std::chrono::high_resolution_clock::now();
+        auto Duration = std::chrono::duration_cast<std::chrono::milliseconds>(DebugTimerEnd - DebugTimerStart);
+        DebugPrint("Finished in: " + std::to_string(Duration.count()) + "ms");
+    }
 #endif
 }
 
 int main(int ArgumentCount, char* ArgumentValues[]) {
+    DebugTimer();
     DebugPrint("Ling: [ Debug ]\n");
 
     std::string FileName = "";
@@ -125,6 +189,7 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
         for (int TokenNumber = 0; TokenNumber < Tokens.size(); TokenNumber++)
         {
             std::string Token = Tokens[TokenNumber];
+            Token = RemoveStartingSpaces(Token); // for indentation
 
             if (Token.find("(") != std::string::npos && Token.find(")") != std::string::npos) // FUNCTION
             {
@@ -147,6 +212,19 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
                     else
                         std::cout << ReplaceTildesWithSpaces(Parameter[0]) << std::endl;
                 }
+                else if (FunctionName == "Print")
+                {
+                    std::vector<std::string> Parameter = SplitByQuotes(Argument);
+                    if (Variables.find(DeleteSurroundingBrackets(Argument)) != Variables.end()) // did find a variable with name
+                        std::cout << Variables[DeleteSurroundingBrackets(Argument)];
+                    else if (Parameter.empty())
+                    {
+                        std::cout << "Line " << (LineNumber + 1) << " Token " << TokenNumber << ": " << Token << " is incorrect, missing content to print or missing quotes.";
+                        return 1;
+                    }
+                    else
+                        std::cout << ReplaceTildesWithSpaces(Parameter[0]);
+                }
                 else
                 {
                     std::cout << "Line " << (LineNumber + 1) << ", Token " << TokenNumber << ": \"" << FunctionName << "\" is incorrect: unkown function.";
@@ -161,9 +239,21 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
             else if (Token == "Variable" && Tokens.size() > (TokenNumber + 3))
             {
                 std::string FinalValue = Tokens[TokenNumber + 3];
+                if (TokenIsString(FinalValue))
+                {
+                    FinalValue = DeleteSurroundingQuotes(FinalValue);
+                    FinalValue = ReplaceTildesWithSpaces(FinalValue);
+                }
+
                 for (int TokenIndex = 4; TokenIndex < Tokens.size() - 1; TokenIndex++)
                 {
                     std::string OtherValue = Tokens[TokenIndex + 1];
+
+                    if (TokenIsString(OtherValue))
+                    {
+                        OtherValue = DeleteSurroundingQuotes(OtherValue);
+                        OtherValue = ReplaceTildesWithSpaces(OtherValue);
+                    }
 
                     if (Tokens[TokenIndex] == "+")
                     {
@@ -271,6 +361,68 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
 
                 DebugPrint("Created variable \"" + Tokens[TokenNumber + 1]  + "\" with value: " + FinalValue + "\n");
                 Variables[Tokens[TokenNumber + 1]] = FinalValue;
+                break;
+            }
+            else if (Token == "If")
+            {
+                int LinesToSkip = 0; // so it doesnt interpret the actual if statement logic code
+                if (Tokens.size() >= 5) // If ValueA == ValueB Run
+                {
+                    std::string ValueA = Tokens[1]; // ValueA
+                    std::string ComparisonSymbol = Tokens[2];
+                    std::string ValueB = Tokens[3]; // ValueB, which is after the comparison symbol
+                    InStatement = true;
+                    std::vector<std::string> NextLineTokens = SplitIntoSpaces(Lines[LineNumber + 1]);
+                    int StartLogicCode = 0;
+                    if (NextLineTokens.size() > 0 && NextLineTokens[0].find('{') != std::string::npos) // next line has an opening brace
+                    {
+                        LinesToSkip++;
+                        StartLogicCode = LineNumber + 1; // line after the opening brace
+                        int ClosingBraceLine = FindNextEndBrace(Lines, StartLogicCode);
+                        if (ClosingBraceLine == -1) // not found
+                        {
+                            std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, no closing brace for logic code.\n";
+                            if (TREAT_WARNINGS_AS_FATAL) return 1; else LineNumber += LinesToSkip; break; // skip to end of if statement logic code
+                        }
+
+                        if (ComparisonSymbol == "==")
+                        {
+                            if (ValueA == ValueB)
+                            {
+                                LineNumber = StartLogicCode; // start interpreting the logic code like normal
+                                break;
+                            }
+                            else
+                            {
+                                LineNumber = ClosingBraceLine + 1; // line after the closing brace and skip the logic code
+                                break;
+                            }
+                        }
+                        else if (ComparisonSymbol == "!=")
+                        {
+                            if (ValueA != ValueB)
+                            {
+                                LineNumber = StartLogicCode; // start interpreting the logic code like normal
+                                break;
+                            }
+                            else
+                            {
+                                LineNumber = ClosingBraceLine + 1; // line after the closing brace and skip the logic code
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, no opening brace for logic code.\n";
+                        if (TREAT_WARNINGS_AS_FATAL) return 1; else LineNumber += LinesToSkip; break; // skip to end of if statement logic code
+                    }
+                }
+                else
+                {
+                    std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, incorrect If statement arguments.\n";
+                    if (TREAT_WARNINGS_AS_FATAL) return 1; else LineNumber += LinesToSkip; break; // skip to end of if statement logic code
+                }
             }
             else if (Token == "DEFINE" && Tokens.size() > (TokenNumber + 2))
             {
@@ -293,9 +445,24 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
                         if (TREAT_WARNINGS_AS_FATAL) return 1;
                     }
                 }
+                break;
+            }
+            else if (Variables.find(Token) != Variables.end()) // this is an existing variable, asking for reassignment?
+            {
+                if (Tokens[TokenNumber + 1] == "=")
+                {
+                    if (Tokens.size() == 3) // identifier, equals, value
+                    {
+                        if (Variables.find(Tokens[TokenNumber + 2]) != Variables.end())
+                            Variables[Token] = Variables[Tokens[TokenNumber + 2]]; // this var = other var
+                        else
+                            Variables[Token] = Tokens[TokenNumber + 2]; // value
+                    }
+                }
             }
         }
     }
 
+    DebugTimer();
     return 0;
 }
