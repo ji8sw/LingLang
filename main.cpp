@@ -15,6 +15,7 @@ void DebugPrint(std::string Content)
 }
 
 bool TREAT_WARNINGS_AS_FATAL = true;
+bool DISABLE_CASE_SENSITIVE_FUNCTIONS = true;
 bool InStatement = false;
 
 std::map<std::string, std::string> Variables =
@@ -55,7 +56,8 @@ std::vector<std::string> SplitByQuotes(const std::string& Content) {
 
     while ((Start = Content.find('"', Start)) != std::string::npos) {
         End = Content.find('"', Start + 1);
-        if (End == std::string::npos) break;
+        if (End == std::string::npos)
+            break;
         Result.push_back(Content.substr(Start + 1, End - Start - 1));
         Start = End + 1;
     }
@@ -140,6 +142,13 @@ std::string RemoveStartingSpaces(std::string Content)
     return Content;
 }
 
+std::string ToLower(std::string Content)
+{
+    for (int CharIndex = 0; CharIndex < Content.size() - 1; CharIndex++)
+        Content[CharIndex] = tolower(Content[CharIndex]);
+    return Content;
+}
+
 bool DebugTimerRunning = false;
 std::chrono::steady_clock::time_point DebugTimerStart;
 void DebugTimer()
@@ -197,9 +206,10 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
                 size_t EndParenthesis = Token.find(')');
 
                 std::string FunctionName = Token.substr(0, StartParenthesis);
+                if (DISABLE_CASE_SENSITIVE_FUNCTIONS) FunctionName = ToLower(FunctionName);
                 std::string Argument = Token.substr(StartParenthesis);
 
-                if (FunctionName == "PrintLine")
+                if (FunctionName == "PrintLine" || DISABLE_CASE_SENSITIVE_FUNCTIONS && FunctionName == "printline")
                 {
                     std::vector<std::string> Parameter = SplitByQuotes(Argument);
                     if (Variables.find(DeleteSurroundingBrackets(Argument)) != Variables.end()) // did find a variable with name
@@ -212,7 +222,7 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
                     else
                         std::cout << ReplaceTildesWithSpaces(Parameter[0]) << std::endl;
                 }
-                else if (FunctionName == "Print")
+                else if (FunctionName == "Print" || DISABLE_CASE_SENSITIVE_FUNCTIONS && FunctionName == "print")
                 {
                     std::vector<std::string> Parameter = SplitByQuotes(Argument);
                     if (Variables.find(DeleteSurroundingBrackets(Argument)) != Variables.end()) // did find a variable with name
@@ -236,7 +246,7 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
                 std::cout << "Line " << (LineNumber + 1) << " Token " << TokenNumber << ": " << Token << " is incorrect, missing a starting or ending function bracket.";
                 return 1;
             }
-            else if (Token == "Variable" && Tokens.size() > (TokenNumber + 3))
+            else if ( (Token == "Variable" || Token == "Var") && Tokens.size() > (TokenNumber + 3))
             {
                 std::string FinalValue = Tokens[TokenNumber + 3];
                 if (TokenIsString(FinalValue))
@@ -368,9 +378,16 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
                 int LinesToSkip = 0; // so it doesnt interpret the actual if statement logic code
                 if (Tokens.size() >= 5) // If ValueA == ValueB Run
                 {
+                    
                     std::string ValueA = Tokens[1]; // ValueA
                     std::string ComparisonSymbol = Tokens[2];
                     std::string ValueB = Tokens[3]; // ValueB, which is after the comparison symbol
+                    
+                    if (Variables.find(ValueA) != Variables.end())
+                        ValueA = Variables[ValueA];
+                    if (Variables.find(ValueB) != Variables.end())
+                        ValueB = Variables[ValueB];
+                    
                     InStatement = true;
                     std::vector<std::string> NextLineTokens = SplitIntoSpaces(Lines[LineNumber + 1]);
                     int StartLogicCode = 0;
@@ -424,6 +441,18 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
                     if (TREAT_WARNINGS_AS_FATAL) return 1; else LineNumber += LinesToSkip; break; // skip to end of if statement logic code
                 }
             }
+            else if (Token == "Quit" && Tokens.size() > 1) // Quit [CODE]
+            {
+                std::cout << Line << std::endl;
+                try {
+                    int Code = stoi(Tokens[1]); // try parse code as int
+                    return Code; // exit with code
+                }
+                catch (const std::invalid_argument& Error) {
+                    std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, invalid exit code.\n";
+                    if (TREAT_WARNINGS_AS_FATAL) return 1; else break;
+                }
+            }
             else if (Token == "DEFINE" && Tokens.size() > (TokenNumber + 2))
             {
                 if (Tokens[TokenNumber + 1] == "TREAT_WARNINGS_AS_FATAL")
@@ -439,6 +468,25 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
                             TREAT_WARNINGS_AS_FATAL = false;
 
                         DebugPrint("Set TREAT_WARNINGS_AS_FATAL to " + std::to_string(TREAT_WARNINGS_AS_FATAL) + "\n");
+                    }
+                    catch (const std::invalid_argument& Error) {
+                        std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, attempt to define bool as otherwise.\n";
+                        if (TREAT_WARNINGS_AS_FATAL) return 1;
+                    }
+                }
+                else if (Tokens[TokenNumber + 1] == "DISABLE_CASE_SENSITIVE_FUNCTIONS")
+                {
+                    try {
+                        if (Tokens[TokenNumber + 2] == "true")
+                            DISABLE_CASE_SENSITIVE_FUNCTIONS = true;
+                        else if (Tokens[TokenNumber + 2] == "false")
+                            DISABLE_CASE_SENSITIVE_FUNCTIONS = false;
+                        else if (stoi(Tokens[TokenNumber + 2]) == 1)
+                            DISABLE_CASE_SENSITIVE_FUNCTIONS = true;
+                        else if (stoi(Tokens[TokenNumber + 2]) == 0)
+                            DISABLE_CASE_SENSITIVE_FUNCTIONS = false;
+
+                        DebugPrint("Set DISABLE_CASE_SENSITIVE_FUNCTIONS to " + std::to_string(DISABLE_CASE_SENSITIVE_FUNCTIONS) + "\n");
                     }
                     catch (const std::invalid_argument& Error) {
                         std::cout << "[WARN] Line " << (LineNumber + 1) << " Token " << TokenNumber << " is incorrect, attempt to define bool as otherwise.\n";
@@ -465,4 +513,4 @@ int main(int ArgumentCount, char* ArgumentValues[]) {
 
     DebugTimer();
     return 0;
-}
+}   

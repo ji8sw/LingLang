@@ -1,13 +1,10 @@
-If 1 == 1 Run
-{
-	PrintLine("1 does equal 1")
-}
+DEFINE DISABLE_CASE_SENSITIVE_FUNCTIONS 1
 
-If 1 == 0 Run
-{
-	PrintLine("1 does equal 0")
-}
+Variable foo = hi
+Var bar = ummm
 
-Variable a = 2 * 3
-Variable b = 1 + a
-PrintLine(b)
+
+If foo == bar Run
+{
+    PrintLine("hi world")
+}
