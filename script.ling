@@ -1,10 +1,22 @@
-DEFINE DISABLE_CASE_SENSITIVE_FUNCTIONS 1
+DEFINE KEYWORD_RESERVE_NUM 1
 
-Variable foo = hi
-Var bar = ummm
+// Variable 1 = 2 // invalid
 
+PrintLine("hi")
+
+Var foo = 1 * 2 // 2
+Var foo = foo * 2 // 4
 
 If foo == bar Run
 {
-    PrintLine("hi world")
+	Print("achievement: how did we get here?")
 }
+
+Var foo = foo / 2 // 2
+PrintLine(foo)
+
+DEFINE DISABLE_CASE_SENSITIVE_FUNCTIONS 1
+
+now i can use: // yes this works as a comment
+
+printline("hi")

@@ -1,17 +1,8 @@
-
-  
-
 # Ling Language
-
-  
 
 Ling is a simple, interpreted programming language created for fun and learning. It provides basic programming principles and is designed to be easy to use. Ling is a WIP and everything is subject to change.
 
-  
-
 ## Features
-
-  
 
 - ****Variable Declaration****: Create and manipulate variables easily.
 
@@ -23,55 +14,25 @@ Ling is a simple, interpreted programming language created for fun and learning.
 
 - ****Basic If Statements****: Compare values easily.
 
-  
-
 ## Usage
-
-  
 
 ### Running a Ling Script
 
-  
-
 To run a Ling script, use the following command from a folder containing Ling.exe:
 
-  
-
-```
-
-Ling script.ling
-
-```
-
-  
+`Ling script.ling`
 
 ### Syntax
 
-  
-
 #### Printing
-
-  
 
 To print a line of text:
 
-  
-
-```
-
-PrintLine("yello warld")
-
-```
-
-  
+`PrintLine("yello warld")`
 
 To print the value of a variable:
 
-  
-
-```
-PrintLine(VariableName)
-```
+`PrintLine(VariableName)`
 
 You can also use `Print` to not make a new line, call them the same way.
 
@@ -79,57 +40,28 @@ These are the only existing functions.
 
 Functions can't have arithmetic as a parameter just yet.
 
-  
-
 #### Variables
-
-  
 
 To declare and initialize a variable:
 
-  
-
-```
-
-Variable MyVariable = 123
-
-  
-
-```
-
-  
+`Variable MyVariable = 123`
 
 Variables can store strings or numbers, but are orientated towards numbers
 
-  
-
 #### If Statements
 
-  
-
 Determine whether or not to run code by following this basic process.
-
-  
-
 ```
 If 1 == 1 Run
 {
     code here
 }
 ```
-
-  
-
 Not following this syntax can cause errors.
 
- 
 #### Arithmetic
 
-  
-
 Basic addition is supported for integers:
-
-  
 
 ```
 Variable a = 5 + 5
@@ -174,13 +106,9 @@ Changes the way warnings are treated, if the lexer discovers a warning and this 
 
 - `DISABLE_CASE_SENSITIVE_FUNCTIONS`
 
-Allows you to call functions regardless of capitals, ex:
+Allows you to call functions regardless of capitals, example:
 `pRintLiNe("hello world")`
 
-  
-
 ## Examples
-
-  
 
 You can find an example script in `script.ling`
